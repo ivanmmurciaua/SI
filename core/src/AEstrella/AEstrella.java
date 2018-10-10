@@ -50,23 +50,54 @@ public class AEstrella {
     }
     
     //COLUMNA=X FILA=Y
-    class Nodo{
+    private class Nodo{
             
         //f(n)
-        int f;
+        protected int f;
         //Total del peso hasta el momento
-        int g;
+        protected  int g;
         //f(h) - Heurística
-        int h;
+        private int h;
         //Coordenada x
-        int x;
+        private int x;
         //Coordenada y
-        int y;
-        //Coordenda z
-        int z;
+        private int y;
+        //Coordenada z
+        private int z;
+        //El padre
+        protected Nodo padre;
         
-        Nodo padre;
+        Nodo(){
+            this.f = 0;
+            this.g = 0;
+            this.h = 0;
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
+            this.padre = null;
+        }
         
+        Nodo(Coordenada c, int f, int g, int h){
+            this.g = g;
+            this.h = h;
+            this.f = this.g + this.h;
+            this.x = c.getX() - (c.getY() + (c.getY()&1)) / 2;
+            this.z = c.getY();
+            this.y = -this.x-this.z;
+            this.padre = null;
+        }
+         
+        Nodo(Nodo n){
+            this.f = n.f;
+            this.g = n.g;
+            this.h = n.h;
+            this.x = n.x;
+            this.y = n.y;
+            this.z = n.z;
+            this.padre = n.padre;
+        }
+        
+        //PARA LAS VECINAS
         Nodo(int x, int y, int z){
             this.f = 0;
             this.g = 0;
@@ -77,26 +108,13 @@ public class AEstrella {
             this.padre = new Nodo();
         }
         
-        Nodo(){
-            this.f = 0;
-            this.g = 0;
-            this.h = 0;
-            this.x = 0;
-            this.y = 0;
-            this.z = 0;
-        }
-
-        
         Nodo transformarACubicas(Coordenada c){
             this.x = c.getX() - (c.getY() + (c.getY()&1)) / 2;
             this.z = c.getY();
             this.y = -this.x-this.z;
             return this;
         }
-        
-        
-        //Cube(+1, -1, 0), Cube(+1, 0, -1), Cube(0, +1, -1), 
-        //Cube(-1, +1, 0), Cube(-1, 0, +1), Cube(0, -1, +1),
+
         ArrayList misVecinitas(){
             //List<Nodo> listavecinas = Arrays.asList(new Nodo(1,-1,0),new Nodo(1,0,-1),new Nodo(0,1,-1),new Nodo(-1,1,0),new Nodo(-1,0,1),new Nodo(0,-1,1));
             int vecinass[][] = new int[][]{
@@ -112,12 +130,51 @@ public class AEstrella {
             vecinas = new ArrayList<Nodo>();
             Nodo vecina = new Nodo();
             
-            for (int i=0;i<vecinass.length;i++){
-                vecinas.add(new Nodo(this.x+vecinass[i][0],this.y+vecinass[i][1],this.z+vecinass[i][2]));
+            for (int[] vecinas1 : vecinass) {
+                vecinas.add(new Nodo(this.x + vecinas1[0], this.y + vecinas1[1], this.z + vecinas1[2]));
             }
             
             return vecinas;
         }
+        
+        public Nodo obtenerMenorf(ArrayList<Nodo> lf){
+            Nodo nod = new Nodo();
+            if(lf.size() == 1){
+                nod = lf.get(0);
+            }
+            else{
+                nod = lf.get(0);
+                for(int i=1;i<lf.size();i++){
+                    if(lf.get(i).f < nod.f)
+                        nod = lf.get(i);
+                }
+            }
+            return nod;
+        }
+        
+        public void setH(int h){
+            this.h = h;
+        }
+        public int getH(){
+            return this.h;
+        }
+        public void setFather(Nodo n){
+            this.padre = n;
+        }
+        public Nodo getFather(){
+            return this.padre;
+        }
+        
+        public int heuristicaDeCubos(Nodo b){
+            return (abs(this.x - b.x) + abs(this.y - b.y) + abs(this.z - b.z)) / 2;
+        }
+    
+        public Coordenada deCubicaAOffset(Nodo a){
+        Coordenada c = new Coordenada();
+        c.x = a.x + (a.z + (a.z & 1)) / 2;
+        c.y = a.z;
+        return c;
+    }
         
         @Override
         public String toString(){
@@ -128,43 +185,43 @@ public class AEstrella {
         
     }
      
-    public double heuristicaDeCubos(Nodo a, Nodo b){
-            return (abs(a.x - b.x) + abs(a.y - b.y) + abs(a.z - b.z)) / 2;
-    }
-    
-    public Coordenada deCubicaAOffset(Nodo a){
-        Coordenada c = new Coordenada();
-        c.x = a.x + (a.z + (a.z & 1)) / 2;
-        c.y = a.z;
-        return c;
-    }
-    
     //Calcula el A*
     public int CalcularAEstrella(){
 
         boolean encontrado = true;
         int result = 1;
-        
+       
         //AQUÍ ES DONDE SE DEBE IMPLEMENTAR A*
-        Coordenada cab = mundo.getCaballero();
-        Coordenada drg = mundo.getDragon();
-        Nodo ini = new Nodo();
-        Nodo end = new Nodo();
-        //this.camino[cab.y][cab.x] = 'X';
-        //this.camino_expandido[cab.y][cab.x] = 1;
-        //this.camino[drg.y][drg.x] = 'D';
+        Nodo n;
+        Nodo end;
         
-        /*ArrayList<Nodo> listaInterior = new ArrayList<Nodo>();
+        int g = 0;
+        int h = 0;
+        
+        end = new Nodo(this.mundo.getDragon(),0,g,h);
+        n = new Nodo(this.mundo.getCaballero(),0,g,h);
+        n.setH(n.heuristicaDeCubos(end));
+        System.out.println(n.h);
+        
+        ArrayList<Nodo> listaInterior = new ArrayList<Nodo>();
         ArrayList<Nodo> listaFrontera = new ArrayList<Nodo>();
-        listaFrontera.add(ini.transformarACubicas(cab));
+        listaFrontera.add(n);
         while(!listaFrontera.isEmpty()){
+            n = n.obtenerMenorf(listaFrontera);
+            listaFrontera.remove(n);
+            listaInterior.add(n);
             
-        }*/
+            if(n.x == end.x && n.y == end.y && n.z == end.z){
+                encontrado = true;
+                //RECONSTRUIMOS EL CAMINO DE LA META HACIA EL INICIO MIRANDO PADRES
+            }
+            
+        }
         
-        
-
         //Si ha encontrado la solución, es decir, el camino, muestra las matrices camino y camino_expandidos y el número de nodos expandidos
         if(encontrado){
+            
+            /*
             System.out.println("Caballero está en: "+cab.getY()+","+cab.getX()+"\n En coordenadas cúbicas: "+ini.transformarACubicas(cab).toString());
             System.out.println("Los vecinos del caballero son: ");
             ArrayList<Nodo> vecinas = ini.misVecinitas();
@@ -175,11 +232,11 @@ public class AEstrella {
                 System.out.println(deCubicaAOffset(vecinas.get(i)).getY()+","+deCubicaAOffset(vecinas.get(i)).getX()+"-> "+mundo.getCelda(deCubicaAOffset(vecinas.get(i)).getX(), deCubicaAOffset(vecinas.get(i)).getY()));
             }
             
+            //Dragón
             System.out.println("El dragón se encuentra en: "+drg.getY()+","+drg.getX()+"\n En coordenadas cubicas: "+end.transformarACubicas(drg).toString());
-            System.out.println("f(h): "+heuristicaDeCubos(ini,end));
+            System.out.println("f(h): "+heuristicaDeCubos(ini,end)); 
             
-            
-            
+            */
             
             //Mostrar las soluciones
             System.out.println("Camino");
