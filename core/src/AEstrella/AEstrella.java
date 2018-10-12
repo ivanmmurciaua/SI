@@ -152,8 +152,17 @@ public class AEstrella {
             return nod;
         }
         
-        public void setH(int h){
-            this.h = h;
+        public boolean esta(ArrayList<Nodo> l){
+            for(int i=0;i<l.size();i++){
+                if(l.get(i).equals(this)){
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        public void setH(Nodo b){
+            this.h= (abs(this.x - b.x) + abs(this.y - b.y) + abs(this.z - b.z)) / 2;
         }
         public int getH(){
             return this.h;
@@ -164,25 +173,66 @@ public class AEstrella {
         public Nodo getFather(){
             return this.padre;
         }
-        
-        public int heuristicaDeCubos(Nodo b){
-            return (abs(this.x - b.x) + abs(this.y - b.y) + abs(this.z - b.z)) / 2;
+
+        public boolean equals(Nodo b){
+            return (this.x == b.x && this.y == b.y && this.z == b.z);
         }
-    
-        public Coordenada deCubicaAOffset(Nodo a){
-        Coordenada c = new Coordenada();
-        c.x = a.x + (a.z + (a.z & 1)) / 2;
-        c.y = a.z;
-        return c;
-    }
+        
+        public Coordenada deCubicaAOffset(){
+            Coordenada c = new Coordenada();
+            c.x = this.x + (this.z + (this.z & 1)) / 2;
+            c.y = this.z;
+            return c;
+        }
+        
+        public void setG(){
+            switch(mundo.getCelda(this.deCubicaAOffset().getX(), this.deCubicaAOffset().getX())){
+                case 'c' : this.g = this.padre.g + 1;
+                           break;
+                case 'h' : this.g = this.padre.g + 2;
+                           break;
+                case 'a' : this.g = this.padre.g + 3;
+                           break;
+            }
+        }
+        
+        public int Ge(Nodo a){
+            int res = 0;
+            switch(mundo.getCelda(this.deCubicaAOffset().getX(), this.deCubicaAOffset().getY())){
+                case 'c' : res = a.g + 1;
+                         break;
+                case 'h' : res = a.g + 2;
+                         break;
+                case 'a' : res = a.g + 3;
+                         break;
+            }
+            return res;
+        }
+        
+        public void setF(){
+            this.f = this.g + this.h;
+        }
         
         @Override
         public String toString(){
             String res;
-            res = "X= " + this.x + "; Z= " + this.z + "; Y= " +this.y ;
+            res = "COORDENADAS: ["+this.deCubicaAOffset().getY()+","+this.deCubicaAOffset().getX()+"] ;CUBICAS: X= " + this.x + "; Z= " + this.z + "; Y= " +this.y + "; F = "+this.f+"; G= "+this.g+"; H= "+this.h+"; FATHER = "+this.padre;
             return res;
         }
         
+    }
+    
+    public ArrayList<Nodo> eligiendoVecinas(ArrayList<Nodo> vec, ArrayList<Nodo> li){
+        ArrayList<Nodo> elegidas = new ArrayList<Nodo>();
+        //VECINAS
+        for(int i=0;i<vec.size();i++){
+            if(!vec.get(i).esta(li)){
+                if(this.mundo.getCelda(vec.get(i).deCubicaAOffset().getX(), vec.get(i).deCubicaAOffset().getY()) != 'b' && this.mundo.getCelda(vec.get(i).deCubicaAOffset().getX(), vec.get(i).deCubicaAOffset().getY()) != 'p'){
+                   elegidas.add(vec.get(i));
+                }
+            }
+        }
+        return elegidas;
     }
      
     //Calcula el A*
@@ -200,43 +250,98 @@ public class AEstrella {
         
         end = new Nodo(this.mundo.getDragon(),0,g,h);
         n = new Nodo(this.mundo.getCaballero(),0,g,h);
-        n.setH(n.heuristicaDeCubos(end));
-        System.out.println(n.h);
+        
+        n.setH(end);
+        //System.out.println(n.h);
         
         ArrayList<Nodo> listaInterior = new ArrayList<Nodo>();
         ArrayList<Nodo> listaFrontera = new ArrayList<Nodo>();
         listaFrontera.add(n);
+        
+        
+        
         while(!listaFrontera.isEmpty()){
-            n = n.obtenerMenorf(listaFrontera);
-            listaFrontera.remove(n);
-            listaInterior.add(n);
-            
-            if(n.x == end.x && n.y == end.y && n.z == end.z){
-                encontrado = true;
-                //RECONSTRUIMOS EL CAMINO DE LA META HACIA EL INICIO MIRANDO PADRES
+            System.out.println("LISTA INTERIOR");
+            for(int i=0;i<listaInterior.size();i++){
+                System.out.println(listaInterior.get(i));
             }
+            System.out.println("LISTA FRONTERA");
+            for(int i=0;i<listaFrontera.size();i++){
+                System.out.println(listaFrontera.get(i));
+            }
+            n = n.obtenerMenorf(listaFrontera);
+            
+            //camino[deCubicaAOffset(n).getY()][deCubicaAOffset(n).getX()] = 'X';
+            
+            //System.out.println(n.equals(end));
+            
+            
+            if(n.equals(end)){
+                encontrado = true;
+                break;
+            }
+            else{ //b , p
+                listaFrontera.remove(n);
+                listaInterior.add(n);
+                ArrayList<Nodo> vecinas = n.misVecinitas();
+                vecinas = eligiendoVecinas(vecinas,listaInterior);
+                for(int i=0;i<vecinas.size();i++){
+                    g = vecinas.get(i).Ge(n);
+                 
+                    
+                    if(!vecinas.get(i).esta(listaFrontera)){
+                        vecinas.get(i).setH(end);
+                        vecinas.get(i).g = g;
+                        vecinas.get(i).setF();
+                        vecinas.get(i).setFather(n);
+                        listaFrontera.add(vecinas.get(i));
+                    }
+                    else{
+                        if(g < vecinas.get(i).g){
+                            vecinas.get(i).setFather(n);
+                            vecinas.get(i).g = g;
+                            vecinas.get(i).setF();
+                        }
+                    }
+                }
+            }
+            
+            
+            
             
         }
         
+        
+        
         //Si ha encontrado la solución, es decir, el camino, muestra las matrices camino y camino_expandidos y el número de nodos expandidos
         if(encontrado){
-            
-            /*
-            System.out.println("Caballero está en: "+cab.getY()+","+cab.getX()+"\n En coordenadas cúbicas: "+ini.transformarACubicas(cab).toString());
+            Nodo solucion = new Nodo();
+            solucion = n;
+            while(solucion != null){
+                System.out.println("\n"+solucion.deCubicaAOffset().getX()+"\n");
+                camino[solucion.deCubicaAOffset().getY()][solucion.deCubicaAOffset().getX()] = 'X';
+                solucion = solucion.padre;
+            }
+            System.out.println("Caballero está en: "+mundo.getCaballero().getY()+","+mundo.getCaballero().getX()+"\n En coordenadas cúbicas: "+n.toString());
             System.out.println("Los vecinos del caballero son: ");
-            ArrayList<Nodo> vecinas = ini.misVecinitas();
-            for(int i=0;i<vecinas.size();i++){
+            //ArrayList<Nodo> vecinas = n.misVecinitas();
+            /*for(int i=0;i<vecinas.size();i++){
                 System.out.println(vecinas.get(i));
-            }
-            for(int i=0;i<vecinas.size();i++){
+            }*/
+            /*for(int i=0;i<vecinas.size();i++){
                 System.out.println(deCubicaAOffset(vecinas.get(i)).getY()+","+deCubicaAOffset(vecinas.get(i)).getX()+"-> "+mundo.getCelda(deCubicaAOffset(vecinas.get(i)).getX(), deCubicaAOffset(vecinas.get(i)).getY()));
-            }
+            }*/
+            
+            //Vamos a mostrar las vecinitas
+            /*for(int i=0;i<vecinas1.size();i++){
+                camino[vecinas1.get(i).deCubicaAOffset().getY()][vecinas1.get(i).deCubicaAOffset().getX()] = 'X';
+            }*/
             
             //Dragón
-            System.out.println("El dragón se encuentra en: "+drg.getY()+","+drg.getX()+"\n En coordenadas cubicas: "+end.transformarACubicas(drg).toString());
-            System.out.println("f(h): "+heuristicaDeCubos(ini,end)); 
+            System.out.println("El dragón se encuentra en: "+mundo.getDragon().getY()+","+mundo.getDragon().getX()+"\n En coordenadas cubicas: "+end.toString());
+            //(System.out.println("f(h): "+n.(end));
+           
             
-            */
             
             //Mostrar las soluciones
             System.out.println("Camino");
