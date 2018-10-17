@@ -128,7 +128,6 @@ public class AEstrella {
             
             ArrayList<Nodo> vecinas;
             vecinas = new ArrayList<Nodo>();
-            Nodo vecina = new Nodo();
             
             for (int[] vecinas1 : vecinass) {
                 vecinas.add(new Nodo(this.x + vecinas1[0], this.y + vecinas1[1], this.z + vecinas1[2]));
@@ -162,14 +161,17 @@ public class AEstrella {
         }
         
         public void setH(Nodo b){
-            this.h= (abs(this.x - b.x) + abs(this.y - b.y) + abs(this.z - b.z)) / 2;
+            this.h= max(abs(this.x - b.x), max(abs(this.y - b.y), abs(this.z - b.z)));        
         }
+        
         public int getH(){
             return this.h;
         }
+        
         public void setFather(Nodo n){
             this.padre = n;
         }
+        
         public Nodo getFather(){
             return this.padre;
         }
@@ -183,6 +185,10 @@ public class AEstrella {
             c.x = this.x + (this.z + (this.z & 1)) / 2;
             c.y = this.z;
             return c;
+        }
+        
+        public int getF(){
+            return this.f;
         }
         
         public void setG(){
@@ -238,8 +244,8 @@ public class AEstrella {
     //Calcula el A*
     public int CalcularAEstrella(){
 
-        boolean encontrado = true;
-        int result = 1;
+        boolean encontrado = false;
+        int result = -1;
        
         //AQUÍ ES DONDE SE DEBE IMPLEMENTAR A*
         Nodo n;
@@ -250,9 +256,8 @@ public class AEstrella {
         
         end = new Nodo(this.mundo.getDragon(),0,g,h);
         n = new Nodo(this.mundo.getCaballero(),0,g,h);
-        
+        //Asignamos la heurística
         n.setH(end);
-        //System.out.println(n.h);
         
         ArrayList<Nodo> listaInterior = new ArrayList<Nodo>();
         ArrayList<Nodo> listaFrontera = new ArrayList<Nodo>();
@@ -271,11 +276,6 @@ public class AEstrella {
             }
             n = n.obtenerMenorf(listaFrontera);
             
-            //camino[deCubicaAOffset(n).getY()][deCubicaAOffset(n).getX()] = 'X';
-            
-            //System.out.println(n.equals(end));
-            
-            
             if(n.equals(end)){
                 encontrado = true;
                 break;
@@ -285,9 +285,9 @@ public class AEstrella {
                 listaInterior.add(n);
                 ArrayList<Nodo> vecinas = n.misVecinitas();
                 vecinas = eligiendoVecinas(vecinas,listaInterior);
+                
                 for(int i=0;i<vecinas.size();i++){
                     g = vecinas.get(i).Ge(n);
-                 
                     
                     if(!vecinas.get(i).esta(listaFrontera)){
                         vecinas.get(i).setH(end);
@@ -305,44 +305,28 @@ public class AEstrella {
                     }
                 }
             }
-            
-            
-            
-            
         }
         
         
         
         //Si ha encontrado la solución, es decir, el camino, muestra las matrices camino y camino_expandidos y el número de nodos expandidos
         if(encontrado){
-            Nodo solucion = new Nodo();
-            solucion = n;
+            result = 1;
+            for(int i=0;i<listaInterior.size();i++){
+                this.camino_expandido[listaInterior.get(i).deCubicaAOffset().getY()][listaInterior.get(i).deCubicaAOffset().getX()] = i;
+                this.expandidos = i;
+            }
+            
+            Nodo solucion = n;
+            this.coste_total = solucion.padre.f;
             while(solucion != null){
-                System.out.println("\n"+solucion.deCubicaAOffset().getX()+"\n");
-                camino[solucion.deCubicaAOffset().getY()][solucion.deCubicaAOffset().getX()] = 'X';
+                this.camino[solucion.deCubicaAOffset().getY()][solucion.deCubicaAOffset().getX()] = 'X';    
                 solucion = solucion.padre;
             }
-            System.out.println("Caballero está en: "+mundo.getCaballero().getY()+","+mundo.getCaballero().getX()+"\n En coordenadas cúbicas: "+n.toString());
-            System.out.println("Los vecinos del caballero son: ");
-            //ArrayList<Nodo> vecinas = n.misVecinitas();
-            /*for(int i=0;i<vecinas.size();i++){
-                System.out.println(vecinas.get(i));
-            }*/
-            /*for(int i=0;i<vecinas.size();i++){
-                System.out.println(deCubicaAOffset(vecinas.get(i)).getY()+","+deCubicaAOffset(vecinas.get(i)).getX()+"-> "+mundo.getCelda(deCubicaAOffset(vecinas.get(i)).getX(), deCubicaAOffset(vecinas.get(i)).getY()));
-            }*/
             
-            //Vamos a mostrar las vecinitas
-            /*for(int i=0;i<vecinas1.size();i++){
-                camino[vecinas1.get(i).deCubicaAOffset().getY()][vecinas1.get(i).deCubicaAOffset().getX()] = 'X';
-            }*/
-            
-            //Dragón
+            System.out.println("Caballero está en: "+mundo.getCaballero().getY()+","+mundo.getCaballero().getX()+"\n En coordenadas cúbicas: "+n.toString());     
             System.out.println("El dragón se encuentra en: "+mundo.getDragon().getY()+","+mundo.getDragon().getX()+"\n En coordenadas cubicas: "+end.toString());
-            //(System.out.println("f(h): "+n.(end));
-           
-            
-            
+  
             //Mostrar las soluciones
             System.out.println("Camino");
             mostrarCamino();
@@ -351,6 +335,7 @@ public class AEstrella {
             mostrarCaminoExpandido();
             
             System.out.println("Nodos expandidos: "+expandidos);
+            System.out.println(this.coste_total);
         }
 
         return result;
