@@ -49,6 +49,7 @@ public class AEstrella {
                 }
     }
     
+    //
     //COLUMNA=X FILA=Y
     private class Nodo{
             
@@ -137,15 +138,18 @@ public class AEstrella {
         }
         
         public Nodo obtenerMenorf(ArrayList<Nodo> lf){
-            Nodo nod = new Nodo();
+            Nodo nod;
             if(lf.size() == 1){
                 nod = lf.get(0);
             }
             else{
                 nod = lf.get(0);
                 for(int i=1;i<lf.size();i++){
-                    if(lf.get(i).f < nod.f)
-                        nod = lf.get(i);
+                    if(lf.get(i).f <= nod.f){
+                        if(lf.get(i).h < nod.h){
+                            nod = lf.get(i);
+                        }
+                    }
                 }
             }
             return nod;
