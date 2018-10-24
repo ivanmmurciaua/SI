@@ -54,11 +54,11 @@ public class AEstrella {
     private class Nodo{
             
         //f(n)
-        protected int f;
+        protected float f;
         //Total del peso hasta el momento
         protected  int g;
         //f(h) - Heurística
-        private int h;
+        private float h;
         //Coordenada x
         private int x;
         //Coordenada y
@@ -146,9 +146,9 @@ public class AEstrella {
                 nod = lf.get(0);
                 for(int i=1;i<lf.size();i++){
                     if(lf.get(i).f <= nod.f){
-                        if(lf.get(i).h < nod.h){
+                        //if(lf.get(i).h < nod.h){
                             nod = lf.get(i);
-                        }
+                        //}
                     }
                 }
             }
@@ -168,7 +168,19 @@ public class AEstrella {
             this.h= max(abs(this.x - b.x), max(abs(this.y - b.y), abs(this.z - b.z)));        
         }
         
-        public int getH(){
+        public void setH0(Nodo b){
+            this.h = 0;
+        }
+        
+        public void setHEuclidea(Nodo b){
+           this.h = (int) sqrt(pow((b.deCubicaAOffset().getX()-this.deCubicaAOffset().getX()),2)+(pow((b.deCubicaAOffset().getY()-this.deCubicaAOffset().getY()),2)) );
+        }
+        
+        public void setHManhattan(Nodo b){
+            this.h = abs((b.deCubicaAOffset().getX()-this.deCubicaAOffset().getX())+(b.deCubicaAOffset().getY()-this.deCubicaAOffset().getY()));
+        }
+        
+        public float getH(){
             return this.h;
         }
         
@@ -191,7 +203,7 @@ public class AEstrella {
             return c;
         }
         
-        public int getF(){
+        public float getF(){
             return this.f;
         }
         
