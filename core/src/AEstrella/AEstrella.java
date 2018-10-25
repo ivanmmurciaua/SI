@@ -29,11 +29,13 @@ public class AEstrella {
     //Coste del camino
     float coste_total;
     
+    //Constructor de AEstrella
     public AEstrella(){
         expandidos = 0;
         mundo = new Mundo();
     }
     
+    //Constructor de copia de AEstrella
     public AEstrella(Mundo m){
         //Copia el mundo que le llega por parámetro
         mundo = new Mundo(m);
@@ -49,9 +51,8 @@ public class AEstrella {
                 }
     }
     
-    //COLUMNA=X FILA=Y
+    //Clase nodo (COLUMNA=X FILA=Y)
     private class Nodo{
-    
         //f(n)
         protected float f;
         //Total del peso hasta el momento
@@ -78,7 +79,10 @@ public class AEstrella {
             this.padre = null;
         }
         
-        //Constructor con datos
+        /* Constructor con datos, aqui transformamos las coordenadas
+        ** cartesianas en coordenadas cubicas, y inicializamos el
+        ** padre a null
+        */
         Nodo(Coordenada c, int f, int g, int h){
             this.g = g;
             this.h = h;
@@ -100,7 +104,7 @@ public class AEstrella {
             this.padre = n.padre;
         }
         
-        //Constructor para las vecinas, constructor de Nodo con coordenadas
+        //Constructor para las vecinas (constructor de Nodo con coordenadas cubicas)
         Nodo(int x, int y, int z){
             this.f = 0;
             this.g = 0;
@@ -111,8 +115,8 @@ public class AEstrella {
             this.padre = new Nodo();
         }
 
-        //Sacamos las vecinas
-        ArrayList misVecinitas(){
+        //Metodo para extraer las vecinas del nodo actual
+        public ArrayList misVecinitas(){
             ArrayList<Nodo> vecinas;
             vecinas = new ArrayList<Nodo>();
             int vecinass[][] = new int[][]{
@@ -129,7 +133,7 @@ public class AEstrella {
             return vecinas;
         }
         
-        //Obtenemos el nodo con menor f y a su vez, menor h
+        //Metodo para obtener el nodo con menor f dentro de la Lista Frontera
         public Nodo obtenerMenorf(ArrayList<Nodo> lf){
             Nodo nod;
             if(lf.size() == 1){
@@ -139,9 +143,9 @@ public class AEstrella {
                 nod = lf.get(0);
                 for(int i=1;i<lf.size();i++){
                     if(lf.get(i).f <= nod.f){
-                        if(lf.get(i).h < nod.h){
-                            nod = lf.get(i);
-                        }
+                        //if(lf.get(i).h < nod.h){    // Comento la comprobacion de la h
+                            nod = lf.get(i);         //  ya que en algunos mapas se pierde 
+                        //}                         //   optimalidad
                     }
                 }
             }
@@ -180,6 +184,8 @@ public class AEstrella {
             this.h = abs((b.deCubicaAOffset().getX()-this.deCubicaAOffset().getX())+(b.deCubicaAOffset().getY()-this.deCubicaAOffset().getY()));
         }
         
+        /* FIN HEURISTICAS */
+        
         //Getter del atributo h
         public float getH(){
             return this.h;
@@ -205,6 +211,14 @@ public class AEstrella {
             return this.padre;
         }
         
+        //Metodo para transformar un nodo de coordenadas cubicas a cartesianas
+        public Coordenada deCubicaAOffset(){
+            Coordenada c = new Coordenada();
+            c.x = this.x + (this.z + (this.z & 1)) / 2;
+            c.y = this.z;
+            return c;
+        }
+        
         //Setter del peso del camino
         public int setG(Nodo a){
             int res = 0;
@@ -219,14 +233,6 @@ public class AEstrella {
             return res;
         }
         
-        //Metodo para transformar un nodo de coordenadas cubicas a cartesianas
-        public Coordenada deCubicaAOffset(){
-            Coordenada c = new Coordenada();
-            c.x = this.x + (this.z + (this.z & 1)) / 2;
-            c.y = this.z;
-            return c;
-        }
-
         //Equals de la clase Nodo
         public boolean equals(Nodo b){
             return (this.x == b.x && this.y == b.y && this.z == b.z);
@@ -242,11 +248,11 @@ public class AEstrella {
         
     }
     
-    //Metodo para obviar las vecinas no transitables
+    //Metodo para obviar las vecinas no transitables que no estén en lista interior
     public ArrayList<Nodo> eligiendoVecinas(ArrayList<Nodo> vec, ArrayList<Nodo> li){
         ArrayList<Nodo> elegidas = new ArrayList<Nodo>();
         for(int i=0;i<vec.size();i++){
-            if(!vec.get(i).estaEn(li)){
+            if(!vec.get(i).estaEn(li)){            //Aqui no se que hago
                 if(this.mundo.getCelda(vec.get(i).deCubicaAOffset().getX(), vec.get(i).deCubicaAOffset().getY()) != 'b' && this.mundo.getCelda(vec.get(i).deCubicaAOffset().getX(), vec.get(i).deCubicaAOffset().getY()) != 'p'){
                    elegidas.add(vec.get(i));
                 }
@@ -262,47 +268,45 @@ public class AEstrella {
         int result = -1;
        
         //AQUÍ ES DONDE SE DEBE IMPLEMENTAR A*
+        
+        //Nodo actual
         Nodo n;
+        //Dragon
         Nodo end;
-        
+        //Peso
         int g = 0;
-        int h = 0;
         
-        end = new Nodo(this.mundo.getDragon(),0,g,h);
-        n = new Nodo(this.mundo.getCaballero(),0,g,h);
+        end = new Nodo(this.mundo.getDragon(),0,g,0);
+        n = new Nodo(this.mundo.getCaballero(),0,g,0);
+        
         //Asignamos la heurística
         n.setH(end);
         
         ArrayList<Nodo> listaInterior = new ArrayList<Nodo>();
         ArrayList<Nodo> listaFrontera = new ArrayList<Nodo>();
+        
+        //Añadimos el primer nodo a la lista frontera
         listaFrontera.add(n);
-        
-        
-        
+
         while(!listaFrontera.isEmpty()){
-            /*System.out.println("LISTA INTERIOR");
-            for(int i=0;i<listaInterior.size();i++){
-                System.out.println(listaInterior.get(i));
-            }
-            System.out.println("LISTA FRONTERA");
-            for(int i=0;i<listaFrontera.size();i++){
-                System.out.println(listaFrontera.get(i));
-            }*/
+            //Obtenemos el nodo con la menor f
             n = n.obtenerMenorf(listaFrontera);
             
             if(n.equals(end)){
                 encontrado = true;
                 break;
             }
-            else{ //b , p
+            else{
                 listaFrontera.remove(n);
                 listaInterior.add(n);
+                
+                //Sacamos las vecinas del nodo actual quitando las no transitables
                 ArrayList<Nodo> vecinas = n.misVecinitas();
                 vecinas = eligiendoVecinas(vecinas,listaInterior);
                 
                 for(int i=0;i<vecinas.size();i++){
                     g = vecinas.get(i).setG(n);
-                    
+                    //Si no esta en lista frontera, lo metemos
                     if(!vecinas.get(i).estaEn(listaFrontera)){
                         vecinas.get(i).setH(end);
                         vecinas.get(i).g = g;
@@ -310,6 +314,7 @@ public class AEstrella {
                         vecinas.get(i).setFather(n);
                         listaFrontera.add(vecinas.get(i));
                     }
+                     //Si esta, comparamos si su g es mejor de la que tenia y le asignamos el nuevo padre
                     else{
                         if(g < vecinas.get(i).g){
                             vecinas.get(i).setFather(n);
@@ -321,16 +326,18 @@ public class AEstrella {
             }
         }
         
-        
-        
         //Si ha encontrado la solución, es decir, el camino, muestra las matrices camino y camino_expandidos y el número de nodos expandidos
         if(encontrado){
+            
             result = 1;
+            
+            //Sacamos el numero de expandidos
             for(int i=0;i<listaInterior.size();i++){
                 this.camino_expandido[listaInterior.get(i).deCubicaAOffset().getY()][listaInterior.get(i).deCubicaAOffset().getX()] = i;
                 this.expandidos = i;
             }
             
+            //Sacamos el camino
             Nodo solucion = n;
             this.coste_total = solucion.padre.f;
             while(solucion != null){
@@ -338,9 +345,6 @@ public class AEstrella {
                 solucion = solucion.padre;
             }
             
-            System.out.println("Caballero está en: "+mundo.getCaballero().getY()+","+mundo.getCaballero().getX()+"\n En coordenadas cúbicas: "+n.toString());     
-            System.out.println("El dragón se encuentra en: "+mundo.getDragon().getY()+","+mundo.getDragon().getX()+"\n En coordenadas cubicas: "+end.toString());
-  
             //Mostrar las soluciones
             System.out.println("Camino");
             mostrarCamino();
@@ -381,6 +385,7 @@ public class AEstrella {
         }
     }
     
+    //Reinicia A*
     public void reiniciarAEstrella(Mundo m){
         //Copia el mundo que le llega por parámetro
         mundo = new Mundo(m);
@@ -396,6 +401,7 @@ public class AEstrella {
                 }
     }
     
+    //Getter del coste
     public float getCosteTotal(){
         return coste_total;
     }
