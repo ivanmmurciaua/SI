@@ -49,10 +49,9 @@ public class AEstrella {
                 }
     }
     
-    //
     //COLUMNA=X FILA=Y
     private class Nodo{
-            
+    
         //f(n)
         protected float f;
         //Total del peso hasta el momento
@@ -65,9 +64,10 @@ public class AEstrella {
         private int y;
         //Coordenada z
         private int z;
-        //El padre
+        //The padre
         protected Nodo padre;
         
+        //Constructor por defecto de la clase Nodo
         Nodo(){
             this.f = 0;
             this.g = 0;
@@ -78,6 +78,7 @@ public class AEstrella {
             this.padre = null;
         }
         
+        //Constructor con datos
         Nodo(Coordenada c, int f, int g, int h){
             this.g = g;
             this.h = h;
@@ -88,6 +89,7 @@ public class AEstrella {
             this.padre = null;
         }
          
+        //Constructor de copia de la clase nodo
         Nodo(Nodo n){
             this.f = n.f;
             this.g = n.g;
@@ -98,7 +100,7 @@ public class AEstrella {
             this.padre = n.padre;
         }
         
-        //PARA LAS VECINAS
+        //Constructor para las vecinas, constructor de Nodo con coordenadas
         Nodo(int x, int y, int z){
             this.f = 0;
             this.g = 0;
@@ -108,16 +110,11 @@ public class AEstrella {
             this.z = z;
             this.padre = new Nodo();
         }
-        
-        Nodo transformarACubicas(Coordenada c){
-            this.x = c.getX() - (c.getY() + (c.getY()&1)) / 2;
-            this.z = c.getY();
-            this.y = -this.x-this.z;
-            return this;
-        }
 
+        //Sacamos las vecinas
         ArrayList misVecinitas(){
-            //List<Nodo> listavecinas = Arrays.asList(new Nodo(1,-1,0),new Nodo(1,0,-1),new Nodo(0,1,-1),new Nodo(-1,1,0),new Nodo(-1,0,1),new Nodo(0,-1,1));
+            ArrayList<Nodo> vecinas;
+            vecinas = new ArrayList<Nodo>();
             int vecinass[][] = new int[][]{
                 {1,-1,0},
                 {1,0,-1},
@@ -127,16 +124,12 @@ public class AEstrella {
                 {0,-1,1}
             };
             
-            ArrayList<Nodo> vecinas;
-            vecinas = new ArrayList<Nodo>();
-            
-            for (int[] vecinas1 : vecinass) {
+            for(int[] vecinas1 : vecinass) 
                 vecinas.add(new Nodo(this.x + vecinas1[0], this.y + vecinas1[1], this.z + vecinas1[2]));
-            }
-            
             return vecinas;
         }
         
+        //Obtenemos el nodo con menor f y a su vez, menor h
         public Nodo obtenerMenorf(ArrayList<Nodo> lf){
             Nodo nod;
             if(lf.size() == 1){
@@ -146,16 +139,17 @@ public class AEstrella {
                 nod = lf.get(0);
                 for(int i=1;i<lf.size();i++){
                     if(lf.get(i).f <= nod.f){
-                        //if(lf.get(i).h < nod.h){
+                        if(lf.get(i).h < nod.h){
                             nod = lf.get(i);
-                        //}
+                        }
                     }
                 }
             }
             return nod;
         }
         
-        public boolean esta(ArrayList<Nodo> l){
+        //Metodo que nos devuelve si un nodo está en una lista pasada por parametro
+        public boolean estaEn(ArrayList<Nodo> l){
             for(int i=0;i<l.size();i++){
                 if(l.get(i).equals(this)){
                     return true;
@@ -164,61 +158,55 @@ public class AEstrella {
             return false;
         }
         
+        /* HEURISTICAS */
+        
+        //Heuristica relacionada con las coordenadas cúbicas
         public void setH(Nodo b){
-            this.h= max(abs(this.x - b.x), max(abs(this.y - b.y), abs(this.z - b.z)));        
+            this.h = max (abs(this.x - b.x), max(abs(this.y - b.y), abs(this.z - b.z)));        
         }
         
+        //Heuristica 0
         public void setH0(Nodo b){
             this.h = 0;
         }
         
+        //Heuristica Euclídea con coordenadas cartesianas
         public void setHEuclidea(Nodo b){
-           this.h = (int) sqrt(pow((b.deCubicaAOffset().getX()-this.deCubicaAOffset().getX()),2)+(pow((b.deCubicaAOffset().getY()-this.deCubicaAOffset().getY()),2)) );
+           this.h = (float) sqrt(pow((b.deCubicaAOffset().getX()-this.deCubicaAOffset().getX()),2)+(pow((b.deCubicaAOffset().getY()-this.deCubicaAOffset().getY()),2)) );
         }
         
+        //Heuristica Manhattan con coordenadas cartesianas
         public void setHManhattan(Nodo b){
             this.h = abs((b.deCubicaAOffset().getX()-this.deCubicaAOffset().getX())+(b.deCubicaAOffset().getY()-this.deCubicaAOffset().getY()));
         }
         
+        //Getter del atributo h
         public float getH(){
             return this.h;
         }
         
-        public void setFather(Nodo n){
-            this.padre = n;
-        }
-        
-        public Nodo getFather(){
-            return this.padre;
-        }
-
-        public boolean equals(Nodo b){
-            return (this.x == b.x && this.y == b.y && this.z == b.z);
-        }
-        
-        public Coordenada deCubicaAOffset(){
-            Coordenada c = new Coordenada();
-            c.x = this.x + (this.z + (this.z & 1)) / 2;
-            c.y = this.z;
-            return c;
-        }
-        
+        //Getter del atributo f
         public float getF(){
             return this.f;
         }
         
-        public void setG(){
-            switch(mundo.getCelda(this.deCubicaAOffset().getX(), this.deCubicaAOffset().getX())){
-                case 'c' : this.g = this.padre.g + 1;
-                           break;
-                case 'h' : this.g = this.padre.g + 2;
-                           break;
-                case 'a' : this.g = this.padre.g + 3;
-                           break;
-            }
+        //Setter del nodo padre
+        public void setFather(Nodo n){
+            this.padre = n;
         }
         
-        public int Ge(Nodo a){
+        //Setter del atributo f
+        public void setF(){
+            this.f = this.g + this.h;
+        }
+        
+        //Getter del padre
+        public Nodo getFather(){
+            return this.padre;
+        }
+        
+        //Setter del peso del camino
+        public int setG(Nodo a){
             int res = 0;
             switch(mundo.getCelda(this.deCubicaAOffset().getX(), this.deCubicaAOffset().getY())){
                 case 'c' : res = a.g + 1;
@@ -231,10 +219,20 @@ public class AEstrella {
             return res;
         }
         
-        public void setF(){
-            this.f = this.g + this.h;
+        //Metodo para transformar un nodo de coordenadas cubicas a cartesianas
+        public Coordenada deCubicaAOffset(){
+            Coordenada c = new Coordenada();
+            c.x = this.x + (this.z + (this.z & 1)) / 2;
+            c.y = this.z;
+            return c;
+        }
+
+        //Equals de la clase Nodo
+        public boolean equals(Nodo b){
+            return (this.x == b.x && this.y == b.y && this.z == b.z);
         }
         
+        //toString de la clase Nodo
         @Override
         public String toString(){
             String res;
@@ -244,11 +242,11 @@ public class AEstrella {
         
     }
     
+    //Metodo para obviar las vecinas no transitables
     public ArrayList<Nodo> eligiendoVecinas(ArrayList<Nodo> vec, ArrayList<Nodo> li){
         ArrayList<Nodo> elegidas = new ArrayList<Nodo>();
-        //VECINAS
         for(int i=0;i<vec.size();i++){
-            if(!vec.get(i).esta(li)){
+            if(!vec.get(i).estaEn(li)){
                 if(this.mundo.getCelda(vec.get(i).deCubicaAOffset().getX(), vec.get(i).deCubicaAOffset().getY()) != 'b' && this.mundo.getCelda(vec.get(i).deCubicaAOffset().getX(), vec.get(i).deCubicaAOffset().getY()) != 'p'){
                    elegidas.add(vec.get(i));
                 }
@@ -282,14 +280,14 @@ public class AEstrella {
         
         
         while(!listaFrontera.isEmpty()){
-            System.out.println("LISTA INTERIOR");
+            /*System.out.println("LISTA INTERIOR");
             for(int i=0;i<listaInterior.size();i++){
                 System.out.println(listaInterior.get(i));
             }
             System.out.println("LISTA FRONTERA");
             for(int i=0;i<listaFrontera.size();i++){
                 System.out.println(listaFrontera.get(i));
-            }
+            }*/
             n = n.obtenerMenorf(listaFrontera);
             
             if(n.equals(end)){
@@ -303,9 +301,9 @@ public class AEstrella {
                 vecinas = eligiendoVecinas(vecinas,listaInterior);
                 
                 for(int i=0;i<vecinas.size();i++){
-                    g = vecinas.get(i).Ge(n);
+                    g = vecinas.get(i).setG(n);
                     
-                    if(!vecinas.get(i).esta(listaFrontera)){
+                    if(!vecinas.get(i).estaEn(listaFrontera)){
                         vecinas.get(i).setH(end);
                         vecinas.get(i).g = g;
                         vecinas.get(i).setF();
