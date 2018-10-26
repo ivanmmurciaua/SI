@@ -164,9 +164,14 @@ public class AEstrella {
         
         /* HEURISTICAS */
         
-        //Heuristica relacionada con las coordenadas cúbicas
-        public void setH(Nodo b){
+        //Heuristica relacionada con las coordenadas cubicas
+        public void setHCManhattan(Nodo b){
             this.h = max (abs(this.x - b.x), max(abs(this.y - b.y), abs(this.z - b.z)));        
+        }
+        
+        //Heuristica relacionada con euclidea en coordenadas cubicas
+        public void setHCEuclidea(Nodo b){
+            this.h = (float)sqrt(pow(b.x-this.x,2) + pow(b.y-this.y,2) + pow(b.z-this.z,2));
         }
         
         //Heuristica 0
@@ -176,7 +181,7 @@ public class AEstrella {
         
         //Heuristica Euclídea con coordenadas cartesianas
         public void setHEuclidea(Nodo b){
-           this.h = (float) sqrt(pow((b.deCubicaAOffset().getX()-this.deCubicaAOffset().getX()),2)+(pow((b.deCubicaAOffset().getY()-this.deCubicaAOffset().getY()),2)) );
+           this.h = (float)sqrt(pow((b.deCubicaAOffset().getX()-this.deCubicaAOffset().getX()),2)+(pow((b.deCubicaAOffset().getY()-this.deCubicaAOffset().getY()),2)) );
         }
         
         //Heuristica Manhattan con coordenadas cartesianas
@@ -280,7 +285,7 @@ public class AEstrella {
         n = new Nodo(this.mundo.getCaballero(),0,g,0);
         
         //Asignamos la heurística
-        n.setH(end);
+        n.setHCEuclidea(end);
         
         ArrayList<Nodo> listaInterior = new ArrayList<Nodo>();
         ArrayList<Nodo> listaFrontera = new ArrayList<Nodo>();
@@ -294,6 +299,7 @@ public class AEstrella {
             
             if(n.equals(end)){
                 encontrado = true;
+                n.g = n.padre.g + 1;
                 break;
             }
             else{
@@ -308,13 +314,13 @@ public class AEstrella {
                     g = vecinas.get(i).setG(n);
                     //Si no esta en lista frontera, lo metemos
                     if(!vecinas.get(i).estaEn(listaFrontera)){
-                        vecinas.get(i).setH(end);
+                        vecinas.get(i).setHCEuclidea(end);
                         vecinas.get(i).g = g;
                         vecinas.get(i).setF();
                         vecinas.get(i).setFather(n);
                         listaFrontera.add(vecinas.get(i));
                     }
-                     //Si esta, comparamos si su g es mejor de la que tenia y le asignamos el nuevo padre
+                    //Si esta, comparamos si su g es mejor de la que tenia y le asignamos el nuevo padre
                     else{
                         if(g < vecinas.get(i).g){
                             vecinas.get(i).setFather(n);
@@ -330,6 +336,7 @@ public class AEstrella {
         if(encontrado){
             
             result = 1;
+            this.coste_total = n.g;
             
             //Sacamos el numero de expandidos
             for(int i=0;i<listaInterior.size();i++){
@@ -339,7 +346,6 @@ public class AEstrella {
             
             //Sacamos el camino
             Nodo solucion = n;
-            this.coste_total = solucion.padre.f;
             while(solucion != null){
                 this.camino[solucion.deCubicaAOffset().getY()][solucion.deCubicaAOffset().getX()] = 'X';    
                 solucion = solucion.padre;
