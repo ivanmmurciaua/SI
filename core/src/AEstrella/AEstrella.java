@@ -83,7 +83,7 @@ public class AEstrella {
         ** cartesianas en coordenadas cubicas, y inicializamos el
         ** padre a null
         */
-        Nodo(Coordenada c, int f, int g, int h){
+        Nodo(Coordenada c,int g, int h){
             this.g = g;
             this.h = h;
             this.f = this.g + this.h;
@@ -145,7 +145,7 @@ public class AEstrella {
                     if(lf.get(i).f <= nod.f){
                         //if(lf.get(i).h < nod.h){    // Comento la comprobacion de la h
                             nod = lf.get(i);         //  ya que en algunos mapas se pierde 
-                        //}                         //   optimalidad
+                        //}                         //   la mejor solución
                     }
                 }
             }
@@ -257,7 +257,7 @@ public class AEstrella {
     public ArrayList<Nodo> eligiendoVecinas(ArrayList<Nodo> vec, ArrayList<Nodo> li){
         ArrayList<Nodo> elegidas = new ArrayList<Nodo>();
         for(int i=0;i<vec.size();i++){
-            if(!vec.get(i).estaEn(li)){            //Aqui no se que hago
+            if(!vec.get(i).estaEn(li)){            
                 if(this.mundo.getCelda(vec.get(i).deCubicaAOffset().getX(), vec.get(i).deCubicaAOffset().getY()) != 'b' && this.mundo.getCelda(vec.get(i).deCubicaAOffset().getX(), vec.get(i).deCubicaAOffset().getY()) != 'p'){
                    elegidas.add(vec.get(i));
                 }
@@ -268,10 +268,8 @@ public class AEstrella {
      
     //Calcula el A*
     public int CalcularAEstrella(){
-
-        boolean encontrado = false;
-        int result = -1;
-       
+        boolean encontrado = true;
+        int result = 1;
         //AQUÍ ES DONDE SE DEBE IMPLEMENTAR A*
         
         //Nodo actual
@@ -281,11 +279,11 @@ public class AEstrella {
         //Peso
         int g = 0;
         
-        end = new Nodo(this.mundo.getDragon(),0,g,0);
-        n = new Nodo(this.mundo.getCaballero(),0,g,0);
+        end = new Nodo(this.mundo.getDragon(),g,0);
+        n = new Nodo(this.mundo.getCaballero(),g,0);
         
         //Asignamos la heurística
-        n.setHCEuclidea(end);
+        n.setHCManhattan(end);
         
         ArrayList<Nodo> listaInterior = new ArrayList<Nodo>();
         ArrayList<Nodo> listaFrontera = new ArrayList<Nodo>();
@@ -293,13 +291,30 @@ public class AEstrella {
         //Añadimos el primer nodo a la lista frontera
         listaFrontera.add(n);
 
+
         while(!listaFrontera.isEmpty()){
+            
             //Obtenemos el nodo con la menor f
             n = n.obtenerMenorf(listaFrontera);
             
             if(n.equals(end)){
                 encontrado = true;
-                n.g = n.padre.g + 1;
+                result = 1;
+                this.coste_total = n.padre.g + 1;
+            
+                //Sacamos el numero de expandidos
+                for(int i=0;i<listaInterior.size();i++){
+                    this.camino_expandido[listaInterior.get(i).deCubicaAOffset().getY()][listaInterior.get(i).deCubicaAOffset().getX()] = i;
+                    this.expandidos = i;
+                }
+            
+                //Sacamos el camino
+                Nodo solucion = n;
+                while(solucion != null){
+                    this.camino[solucion.deCubicaAOffset().getY()][solucion.deCubicaAOffset().getX()] = 'X';    
+                    solucion = solucion.padre;
+                }
+          
                 break;
             }
             else{
@@ -314,7 +329,7 @@ public class AEstrella {
                     g = vecinas.get(i).setG(n);
                     //Si no esta en lista frontera, lo metemos
                     if(!vecinas.get(i).estaEn(listaFrontera)){
-                        vecinas.get(i).setHCEuclidea(end);
+                        vecinas.get(i).setHCManhattan(end);
                         vecinas.get(i).g = g;
                         vecinas.get(i).setF();
                         vecinas.get(i).setFather(n);
@@ -334,23 +349,7 @@ public class AEstrella {
         
         //Si ha encontrado la solución, es decir, el camino, muestra las matrices camino y camino_expandidos y el número de nodos expandidos
         if(encontrado){
-            
-            result = 1;
-            this.coste_total = n.g;
-            
-            //Sacamos el numero de expandidos
-            for(int i=0;i<listaInterior.size();i++){
-                this.camino_expandido[listaInterior.get(i).deCubicaAOffset().getY()][listaInterior.get(i).deCubicaAOffset().getX()] = i;
-                this.expandidos = i;
-            }
-            
-            //Sacamos el camino
-            Nodo solucion = n;
-            while(solucion != null){
-                this.camino[solucion.deCubicaAOffset().getY()][solucion.deCubicaAOffset().getX()] = 'X';    
-                solucion = solucion.padre;
-            }
-            
+
             //Mostrar las soluciones
             System.out.println("Camino");
             mostrarCamino();
