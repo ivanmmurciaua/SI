@@ -7,6 +7,8 @@
 package pkg1819_p2si;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * 
@@ -14,8 +16,8 @@ import java.io.*;
  */
 public class Adaboost {
     
-    final static int CDaUsar = 400;
-    final static int PruAle = 500;
+    final static int CDaUsar = 1000;
+    final static int PruAle = 5000;
     
     
     class CD{
@@ -23,7 +25,7 @@ public class Adaboost {
         private int pixel;
         private int umbral;
         private int direccion;
-        private float alfa;
+        private double alfa;
         
         CD(){
             this.pixel = (int)(Math.random()*784);
@@ -40,39 +42,49 @@ public class Adaboost {
             this.alfa = 0;
         }
         
-        @Override
-        public String toString(){
-            return this.pixel+" "+this.umbral+" "+this.direccion+" "+this.alfa;
+        CD(CD cd){
+            this.pixel = cd.pixel;
+            this.umbral = cd.umbral;
+            this.direccion = cd.direccion;
+            this.alfa = cd.alfa;
         }
         
-        public void escribirEnFichero(CD cf, boolean switcheo, String nombrefichero){
+        /*
+        * Sacamos el umbral del pixel de la imagen pasada que sea igual al
+        * calculado aleatoriamente para nuestro CD
+        */
+        public int estaDentro(Imagen xi){
+            int res = -1;
             
-            //PRIMER FICHERO
-            if(switcheo){
-                FileWriter fichero = null;
-                try{
-                    fichero = new FileWriter(nombrefichero);
-                    PrintWriter pw = new PrintWriter(fichero);
-                    pw.println(cf);
-                }
-                catch (IOException e) {} 
-                finally {
-                   try{
-                   if (null != fichero)
-                      fichero.close();
-                   }
-                   catch (IOException e2) {}
-                }
-            }
-            //CONTINUAMOS ESCRIBIENDO EN EL FICHERO
+            byte imageData[] = xi.getImageData();
+            imageData[this.pixel] = (byte) (255 - imageData[this.pixel]);
+            int umbralDeLaImagen = imageData[this.pixel] + 128;
+            
+            //System.out.println("UMBRAL DE LA IMAGEN "+umbralDeLaImagen+" UMBRAL DEL CD "+this.umbral);
+            
+            if(this.direccion == 1){
+                if(umbralDeLaImagen > this.umbral) res = 1;
+            }    
             else{
-                try(FileWriter fw = new FileWriter(nombrefichero, true);
-                BufferedWriter bw = new BufferedWriter(fw);
-                PrintWriter out = new PrintWriter(bw)){
-                    out.println(cf);
-                }
-                catch (IOException e) {}
+                if(umbralDeLaImagen <= this.umbral) res = 1;
             }
+            
+            //System.out.println("RESULTADO "+res);
+            return res;
+        }        
+        
+        @Override
+        public String toString(){
+            return this.pixel+"|"+this.umbral+"|"+this.direccion+"|"+this.alfa;
+        }
+        
+        public void escribirEnFichero(String nombrefichero){
+            try(FileWriter fw = new FileWriter(nombrefichero, true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter out = new PrintWriter(bw)){
+                out.println(this);
+            }
+            catch (IOException e) {}
         }
         
         public void leerDeFichero(String cf){
@@ -103,44 +115,57 @@ public class Adaboost {
     }
     
     
-    public void Adaboost(){
+    public void Adaboost(ArrayList<Imagen> X, int[] Y){
         
-        CD primero = new CD();
+        //System.out.println(X.size());
+        double[] D = new double[X.size()];
+        Arrays.fill(D,(double)1/X.size());
+        //System.out.println("TODAS LAS POSICIONES DE D INICIALIZADAS A "+D[0]);
         
+        
+        
+        for(int t=0;t<Adaboost.CDaUsar;t++){
+            double errormin = 23132;
+            //System.out.println("NUEVO CD");
+            CD elegido = null;
+           
+            for(int k=1;k<Adaboost.PruAle;k++){
+                 double errorv = (double)0;
+                
+                CD cd = new CD();
+                //System.out.println(cd);
+                //System.out.println("#"+cd.hashCode());
+                
+                
+                for(int i=0;i<D.length;i++){//D.length;i++){
+                    int hxy = 0;
+                    if(cd.estaDentro(X.get(i)) != Y[i]) hxy = 1; 
+                    //System.out.println("Y=1 asi que "+hxy);
+                    errorv += D[i] * hxy;
+                }
+                //System.out.println("ERROR DEL CLASIFICADOR ESTE "+errorv);
+                if(errorv < errormin) {elegido = new CD(cd); errormin=errorv;}
+            }
+            
+            //if(errormin==0){errormin=(double)-9;}
+            //System.out.println(elegido);
+            //System.out.println("#"+elegido.hashCode());
+            //System.out.println(errormin);
+            //System.out.println(D[0]);
+            
+            
+            
+            
+            //CALCULO DE ALFA
+            
+            double alf = (double)(0.5*(Math.log((1-errormin)/errormin)));
+            elegido.alfa = alf;
+            
+            //GRABAMOS EN FICHERO DE TEXTO
+            elegido.escribirEnFichero("pepo.cf");
+        }
+        System.out.println("FIN");
         
         
     }
-    /*
-    ** 
-    
-       BD -> 80%  TRAIN
-          -> 20%  TEST
-    
-       CD
-       +-------------------------+
-       | Píxel     ->  0-784     |
-       | Umbral    ->  0-255     |
-       | Dirección -> +1 o -1    |
-       | alfa      -> formula    |
-       +-------------------------+
-    
-       D -> Vector de pesos (Inicializa a 1/N -> N=X.length)
-       T -> Numero de CD a usar
-       
-       para i=1 hasta A-> Numero de pruebas aleatorias
-            CD = Plano al azar;
-            (El vector Err se supone que lo pasamos nosotros)
-            actualizamos su Et haciendo un sumatorio de D * Err
-            guardamos el clasificador debil con menos Et
-       finpara
-       
-       obtener
-    
-    
-    
-    */
-    
-    
-    
-    
 }
