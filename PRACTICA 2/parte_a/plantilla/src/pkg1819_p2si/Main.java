@@ -14,56 +14,73 @@ import java.util.Arrays;
  */
 public class Main {
     
-    private static final int training = 400;
+    private static final int entrenamientos = 400;
 
     /**
      * @param args the command line arguments
      */
+    
+    //vamosAlGymAda();
+    
     public static void main(String[] args) {
         
-        DBLoader ml = new DBLoader();
-        ml.loadDBFromPath("./db");
+        for (String arg : args)
+            System.out.println(arg);
         
-        ArrayList d0imgs = ml.getImageDatabaseForDigit(0);
+        
+        /*switch(args.length){
+            case 3 : if("-train".equals(args[0])){System.err.println("El comando -train debe tener 1 argumento solo");} else if("-run".equals(args[0])){ System.out.println("Analizando");}
+            break;
+            case 2 : if("-train".equals(args[0])){ System.out.println("Entrenando");} else if("-run".equals(args[0])){System.err.println("El comando -run debe tener 2 argumentos");}
+            break;
+            default : System.err.println("Error:\nModo de uso:\nPara entrenar Adaboost: Adaboost -train fichero.cf\nPara testear Adaboost: Adaboost -run fichero.cf imagen_prueba");
+        }*/
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        //DBLoader ml = new DBLoader();
+        //ml.loadDBFromPath("./db");
+        
+        //ArrayList d0imgs = ml.getImageDatabaseForDigit(0);
         
         //Y cojo el decimo bolso de la bd
-        Imagen img = (Imagen) d0imgs.get(0);
-        System.out.println(img);
+        //Imagen img = (Imagen) d0imgs.get(0);
+        //System.out.println(img);
         
         //La invierto para ilustrar como acceder a los pixels y imprimo los pixeles
         //en hexadecimal
-        System.out.print("Image pixels: ");
+        //System.out.print("Image pixels: ");
         //int max = -255;
         //int min = 255;
-        byte imageData[] = img.getImageData();
-        for (int i = 0; i < imageData.length; i++){
-            imageData[i] = (byte) (255 - imageData[i]);
+        //byte imageData[] = img.getImageData();
+        //for (int i = 0; i < imageData.length; i++){
+        //    imageData[i] = (byte) (255 - imageData[i]);
             //if(imageData[i]+128 < min) min = imageData[i]+128;
             //if(imageData[i]+128 > max) max = imageData[i]+128;
-            System.out.print(imageData[i]+128+" ");
-        }
+        //    System.out.print(imageData[i]+128+" ");
+        //}
         
         //System.out.println("JAP");
         //System.out.println(min);
         //System.out.println(max);
 
         //Muestro la imagen invertida
-        MostrarImagen imgShow = new MostrarImagen();
-        imgShow.setImage(img);
-        imgShow.mostrar();
+        //MostrarImagen imgShow = new MostrarImagen();
+        //imgShow.setImage(img);
+        //imgShow.mostrar();
         
         
-        vamosAlGymAda();
+        
         
         /*
         
-        switch(args.length){
-            case 3 : if("-train".equals(args[0])){System.err.println("El comando -train debe tener 1 argumento solo");} else if("-run".equals(args[0])){ System.out.println("Analizando");}
-            break;
-            case 2 : if("-train".equals(args[0])){ System.out.println("Entrenando");} else if("-run".equals(args[0])){System.err.println("El comando -run debe tener 2 argumentos");}
-            break;
-            default : System.err.println("Error:\nModo de uso:\nPara entrenar Adaboost: Adaboost -train fichero.cf\nPara testear Adaboost: Adaboost -run fichero.cf imagen_prueba");
-        }
+        
             
     */
         

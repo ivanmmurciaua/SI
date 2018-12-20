@@ -16,8 +16,8 @@ import java.util.Arrays;
  */
 public class Adaboost {
     
-    final static int CDaUsar = 1000;
-    final static int PruAle = 5000;
+    final static int CDaUsar = 1;
+    final static int PruAle = 3;
     
     
     class CD{
@@ -139,22 +139,19 @@ public class Adaboost {
                 
                 for(int i=0;i<D.length;i++){//D.length;i++){
                     int hxy = 0;
-                    if(cd.estaDentro(X.get(i)) != Y[i]) hxy = 1; 
-                    //System.out.println("Y=1 asi que "+hxy);
+                    if(cd.estaDentro(X.get(i)) != Y[i]) hxy = 1;
                     errorv += D[i] * hxy;
                 }
                 //System.out.println("ERROR DEL CLASIFICADOR ESTE "+errorv);
                 if(errorv < errormin) {elegido = new CD(cd); errormin=errorv;}
             }
+            //System.out.println(elegido.estaDentro(X.get(0)));
             
             //if(errormin==0){errormin=(double)-9;}
             //System.out.println(elegido);
             //System.out.println("#"+elegido.hashCode());
             //System.out.println(errormin);
             //System.out.println(D[0]);
-            
-            
-            
             
             //CALCULO DE ALFA
             
@@ -163,8 +160,17 @@ public class Adaboost {
             
             //GRABAMOS EN FICHERO DE TEXTO
             elegido.escribirEnFichero("pepo.cf");
+            System.out.println(-elegido.alfa);
+            double Z = 0;
+            for(int i=0;i<D.length;i++){
+                D[i] = (double)D[i]*(Math.pow(Math.E, -elegido.alfa*(Y[i]*elegido.estaDentro(X.get(i)))));
+                Z += (double)D[i];
+            }
+            //System.out.println(D[0]);
+            
+            //for(int i=0;i<D.length;i++) D[i]=D[i]/Z;
         }
-        System.out.println("FIN");
+        //System.out.println("FIN");
         
         
     }
