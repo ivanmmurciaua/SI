@@ -14,174 +14,199 @@ import java.util.Arrays;
  */
 public class Main {
     
-    private static final int entrenamientos = 400;
+    public static DBLoader ml;
 
     /**
      * @param args the command line arguments
      */
     
-    //vamosAlGymAda();
-    
     public static void main(String[] args) {
         
-        for (String arg : args)
-            System.out.println(arg);
-        
-        
-        /*switch(args.length){
-            case 3 : if("-train".equals(args[0])){System.err.println("El comando -train debe tener 1 argumento solo");} else if("-run".equals(args[0])){ System.out.println("Analizando");}
-            break;
-            case 2 : if("-train".equals(args[0])){ System.out.println("Entrenando");} else if("-run".equals(args[0])){System.err.println("El comando -run debe tener 2 argumentos");}
-            break;
-            default : System.err.println("Error:\nModo de uso:\nPara entrenar Adaboost: Adaboost -train fichero.cf\nPara testear Adaboost: Adaboost -run fichero.cf imagen_prueba");
-        }*/
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        //DBLoader ml = new DBLoader();
-        //ml.loadDBFromPath("./db");
-        
-        //ArrayList d0imgs = ml.getImageDatabaseForDigit(0);
-        
-        //Y cojo el decimo bolso de la bd
-        //Imagen img = (Imagen) d0imgs.get(0);
-        //System.out.println(img);
-        
-        //La invierto para ilustrar como acceder a los pixels y imprimo los pixeles
-        //en hexadecimal
-        //System.out.print("Image pixels: ");
-        //int max = -255;
-        //int min = 255;
-        //byte imageData[] = img.getImageData();
-        //for (int i = 0; i < imageData.length; i++){
-        //    imageData[i] = (byte) (255 - imageData[i]);
-            //if(imageData[i]+128 < min) min = imageData[i]+128;
-            //if(imageData[i]+128 > max) max = imageData[i]+128;
-        //    System.out.print(imageData[i]+128+" ");
-        //}
-        
-        //System.out.println("JAP");
-        //System.out.println(min);
-        //System.out.println(max);
-
-        //Muestro la imagen invertida
-        //MostrarImagen imgShow = new MostrarImagen();
-        //imgShow.setImage(img);
-        //imgShow.mostrar();
-        
-        
-        
-        
-        /*
-        
-        
-            
-    */
-        
-        //Adaboost(X,Y);   
-        
-        //Cargador de la BD de SI
-        //DBLoader ml = new DBLoader();
-        //ml.loadDBFromPath("./db");
-        
-        //Accedo a las imagenes de bolsos
-        //ArrayList d0imgs = ml.getImageDatabaseForDigit(5);
-        
-        //Y cojo el decimo bolso de la bd
-        //Imagen img = (Imagen) d0imgs.get(5);
-        //System.out.println(img);
-        
-        //La invierto para ilustrar como acceder a los pixels y imprimo los pixeles
-        //en hexadecimal
-        //System.out.print("Image pixels: ");
-        //int max = -255;
-        //int min = 255;
-        //byte imageData[] = img.getImageData();
-        //for (int i = 0; i < imageData.length; i++){
-        //    imageData[i] = (byte) (255 - imageData[i]);
-        //    if(imageData[i]+128 < min) min = imageData[i]+128;
-        //    if(imageData[i]+128 > max) max = imageData[i]+128;
-        //    System.out.print(imageData[i]+128+" ");
-        //}
-        
-        //System.out.println("JAP");
-        //System.out.println(min);
-        //System.out.println(max);
-
-        //Muestro la imagen invertida
-        //MostrarImagen imgShow = new MostrarImagen();
-        //imgShow.setImage(img);
-        //imgShow.mostrar();
-
+        //Carga DB
+        ml = new DBLoader();
+        ml.loadDBFromPath("./db");
+ 
+        //Control de arg
+        if("Adaboost".equals(args[0])){
+            switch(args.length){
+                case 3: if("-run".equals(args[1])){System.err.println("Error:\nModo de uso:\nPara entrenar Adaboost: Adaboost -train fichero.cf\nPara testear Adaboost: Adaboost -run fichero.cf imagen_prueba");} 
+                        else{gymAda(args[2]);}
+                break;
+                case 4: if("-train".equals(args[1])){System.err.println("Error:\nModo de uso:\nPara entrenar Adaboost: Adaboost -train fichero.cf\nPara testear Adaboost: Adaboost -run fichero.cf imagen_prueba");}
+                        else{teStAda(args[2],args[3]);}
+                break;
+            }
+        }
+        else{System.err.println("Error:\nModo de uso:\nPara entrenar Adaboost: Adaboost -train fichero.cf\nPara testear Adaboost: Adaboost -run fichero.cf imagen_prueba");}
         
     }
     
+    public static int[] sacarY(int categoria){
+        int e = eightypcent(categoria);
+        int res = e/7;
+        int[] Y = new int[e+e];
+        Arrays.fill(Y,-1);
+        switch(categoria){
+            case 0: for(int i=0;i<e;i++) Y[i]=1;
+            break;
+            case 1: for(int i=res*1;i<e;i++) Y[i]=1;
+            break;
+            case 2: for(int i=res*2;i<e;i++) Y[i]=1;
+            break;
+            case 3: for(int i=res*3;i<e;i++) Y[i]=1;
+            break;
+            case 4: for(int i=res*4;i<e;i++) Y[i]=1;
+            break;
+            case 5: for(int i=res*5;i<e;i++) Y[i]=1;
+            break;
+            case 6: for(int i=res*6;i<e;i++) Y[i]=1;
+            break;
+            case 7: for(int i=res*7;i<e;i++) Y[i]=1;
+            break;
+        }
+        return Y;
+    }
     
-    public static void vamosAlGymAda(){
+    public static int eightypcent(int categoria){
+        ArrayList d0imgs = ml.getImageDatabaseForDigit(categoria);
+        double eightypcent = d0imgs.size()*0.75;
+        return (int)eightypcent;
+    }
+    
+    public static ArrayList<Imagen> sacarX(int categoria){
         
-        //Cargador de la BD de SI
-        DBLoader ml = new DBLoader();
-        ml.loadDBFromPath("./db");
-        
-        //Rellenar X con el 80% de imagenes de la BD para el entrenamiento
         ArrayList<Imagen> X = new ArrayList<>();
         Imagen img;
-        for(int i=0; i<8;i++){
-            ArrayList d0imgs = ml.getImageDatabaseForDigit(i);
-            for(int j=0;j<training;j++){
+        
+        int eightypcent = eightypcent(categoria);
+        double restante = eightypcent/7;
+        int total = eightypcent*2;
+
+        for(int i=0;i<8;i++){
+            ArrayList<Imagen> d0imgs = ml.getImageDatabaseForDigit(i);
+            if(i==categoria){
+                for(int j=0;j<(int)eightypcent;j++){
+                    img = (Imagen) d0imgs.get(j);
+                    X.add(img);
+                }
+            }
+            else{
+                for(int k=0;k<(int)restante;k++){
+                    img = (Imagen) d0imgs.get(k);
+                    X.add(img);
+                }
+            }
+            if(i==7){
+                if(total-X.size()>0){
+                    int resante = total-X.size();
+                    for(int h=d0imgs.size()-1;resante>0;resante--){
+                        img = (Imagen) d0imgs.get(h);
+                        X.add(img);
+                        h--;
+                    }
+                }
+            }
+        }
+        return X;
+    }
+
+    public static void gymAda(String cf){
+     
+        Adaboost ada = new Adaboost();
+        for(int i=0;i<8;i++){
+            ArrayList<Imagen> X = sacarX(i);
+            int[] Y = sacarY(i);
+            ada.Adaboost(X,Y,cf);
+        }
+        
+        //TEST
+        Imagen img;
+        ArrayList<Imagen> X = new ArrayList<Imagen>();
+        Adaboost test = new Adaboost();
+        
+        
+        for(int i=0;i<8;i++){
+            int pesto = 0;
+            ArrayList<Imagen> d0imgs = ml.getImageDatabaseForDigit(i);
+            for(int j=d0imgs.size()-1;pesto<40;j--){
                 img = (Imagen) d0imgs.get(j);
-                X.add(img);
+                X.add(img);   
+                pesto++;
             }
         }
 
-        int[] Y_abrigos = new int[3200];
-        Arrays.fill(Y_abrigos,-1);
-        for(int i=0;i<400;i++) Y_abrigos[i]=1;
+            int pepe = 1;
+            int cat = 0;
+            int aciertos=0;
+            double aciertostotales = 0.0;
+            
+            for(int s=0;s<X.size()-1;s++){
+                double[] tests = test.AdaboostRun(X.get(s),cf);
+                if(tests[cat]>0){aciertos++;}
+                pepe++;
+                
+                if(pepe==40){
+                    System.out.println(aciertos+"/40");
+                    aciertostotales += aciertos;
+                    pepe=0;
+                    cat++;
+                    aciertos=0;
+                }
+            }
+            System.out.println((double)aciertostotales/320+"% de acierto");
+            
+            
+                
+                /*for(int e=0;e<tests.length;e++){
+                    System.out.print("<"+tests[e]+" ");
+                }
+                System.out.println(">");*/
+            
         
-        int[] Y_bolsos = new int[3200];
-        Arrays.fill(Y_bolsos,-1);
-        for(int i=400;i<800;i++) Y_bolsos[i]=1;
-        
-        int[] Y_camisetas = new int[3200];
-        Arrays.fill(Y_camisetas,-1);
-        for(int i=800;i<1200;i++) Y_camisetas[i]=1;
-        
-        int[] Y_pantalones = new int[3200];
-        Arrays.fill(Y_pantalones,-1);
-        for(int i=1200;i<1600;i++) Y_pantalones[i]=1;
-        
-        int[] Y_sueters = new int[3200];
-        Arrays.fill(Y_sueters,-1);
-        for(int i=1600;i<2000;i++) Y_sueters[i]=1;
-        
-        int[] Y_vestidos = new int[3200];
-        Arrays.fill(Y_vestidos,-1);
-        for(int i=2000;i<2400;i++) Y_vestidos[i]=1;
-        
-        int[] Y_zapatillas = new int[3200];
-        Arrays.fill(Y_zapatillas,-1);
-        for(int i=2400;i<2800;i++) Y_zapatillas[i]=1;
-        
-        int[] Y_zapatos = new int[3200];
-        Arrays.fill(Y_zapatos,-1);
-        for(int i=2800;i<3200;i++) Y_zapatos[i]=1;
-        
-        
-        //int counter = 1;
-        //for(int i=0;i<Y_abrigos.length;i++){
-        //    if(counter == 50) {System.out.println(Y_bolsos[i]+" "); counter=1;}
-        //    else System.out.print(Y_bolsos[i]+" ");
-        //    counter++;
-        //}
-        
-        Adaboost abrigos = new Adaboost();
-        abrigos.Adaboost(X, Y_abrigos);
     }
+    
+    public static void teStAda(String cf, String imge){
+       
+       Adaboost ada = new Adaboost();
+       Imagen img = new Imagen();
+        img.loadFromPath(imge);
+        byte[] imageData = img.getImageData();
+        int[] imagen = new int[784];
+        
+        for (int i = 0; i < imageData.length; i++){
+            imageData[i] = (byte) (255 - imageData[i]);
+            imagen[i] = (int)imageData[i]+128;
+        }
+
+        double max = (double)-232215.2131;
+        int caete = 0;
+        double[] salida = new double[8];
+        salida = ada.AdaboostRun(imagen,cf);
+       
+        for(int i=0;i<salida.length;i++)
+            System.out.println(salida[i]);
+        
+        for(int i=0;i<salida.length;i++)
+           if(salida[i]>max) {max=salida[i]; caete=i;}
+        
+        switch(caete){
+            case 0 : System.out.println("Adaboost: La imagen es un abrigo");
+            break;
+            case 1 : System.out.println("Adaboost: La imagen es un bolso");
+            break;
+            case 2 : System.out.println("Adaboost: La imagen es una camiseta");
+            break;
+            case 3 : System.out.println("Adaboost: La imagen es un pantalon");
+            break;
+            case 4 : System.out.println("Adaboost: La imagen es un suéter");
+            break;
+            case 5 : System.out.println("Adaboost: La imagen es un vestido");
+            break;
+            case 6 : System.out.println("Adaboost: La imagen es una zapatilla");
+            break;
+            case 7 : System.out.println("Adaboost: La imagen es un zapato");
+            break;
+        }
+   }
     
 }

@@ -16,8 +16,8 @@ import java.util.Arrays;
  */
 public class Adaboost {
     
-    final static int CDaUsar = 1;
-    final static int PruAle = 3;
+    final static int CDaUsar = 80;
+    final static int PruAle = 300;
     
     
     class CD{
@@ -28,6 +28,7 @@ public class Adaboost {
         private double alfa;
         
         CD(){
+
             this.pixel = (int)(Math.random()*784);
             this.umbral = (int)(Math.random()*255);
             this.direccion = (int)(Math.random()*784);
@@ -71,11 +72,25 @@ public class Adaboost {
             
             //System.out.println("RESULTADO "+res);
             return res;
-        }        
+        }
+
+        public int estaDentroParaLeer(int[] imagen){
+            int res = -1;
+            int umbralDeLaImagen = imagen[this.pixel];
+            
+            if(this.direccion == 1){
+                if(umbralDeLaImagen > this.umbral) res = 1;
+            }
+            else{
+                if(umbralDeLaImagen <= this.umbral) res = 1;
+            }
+            
+            return res;
+        }
         
         @Override
         public String toString(){
-            return this.pixel+"|"+this.umbral+"|"+this.direccion+"|"+this.alfa;
+            return this.pixel+";"+this.umbral+";"+this.direccion+";"+this.alfa;
         }
         
         public void escribirEnFichero(String nombrefichero){
@@ -87,20 +102,102 @@ public class Adaboost {
             catch (IOException e) {}
         }
         
-        public void leerDeFichero(String cf){
+    }
+    
+    
+    public void Adaboost(ArrayList<Imagen> X, int[] Y, String cf){
+        System.out.println("--------------------------------------------------------------------------------------------------------------------------");
+        double[] D = new double[X.size()];
+        Arrays.fill(D,(double)1/X.size());
+
+        for(int t=1;t<=Adaboost.CDaUsar;t++){
+            double errormin = 230.0;
+            //System.out.println("NUEVO CD");
+            CD elegido = null;
+            double vector = 0.0;
+            for(int y=0;y<D.length;y++){
+                vector += D[y];
+            }
+            for(int k=1;k<=Adaboost.PruAle;k++){
+                double errorv = 0.0;
+                CD cd = new CD();
+                
+                for(int i=0;i<D.length;i++){
+                    int hxy = 0;
+                    if(cd.estaDentro(X.get(i)) != Y[i]) hxy = 1;
+                    errorv += (D[i] * hxy);    
+                }
+                //double errortotal = errorv/vector;
+                //if(errortotal < errormin) {elegido = new CD(cd); errormin=errortotal;}
+                if(errorv < errormin) {elegido = new CD(cd); errormin=errorv;}
+            }
+
+            
+            //CALCULO DE ALFA
+            if(errormin == 0.0){System.out.println("**********************************************************SOY UN PUTO DESGRACIAO*************************"); break;}
+            System.out.println(errormin+"% de error");
+            double alf = (double)(0.5*(Math.log((1-errormin)/errormin)));
+            if(alf == Double.parseDouble("Infinity")){System.out.println("**********************************************************SOY UN PUTO DESGRACIAO*************************"); break;}
+            elegido.alfa = alf;
+          
+
+            //GRABAMOS EN FICHERO DE TEXTO
+            elegido.escribirEnFichero(cf);
+            System.out.println("Confianza: "+elegido.alfa);
+            
+            double Z = 0.0;
+            for(int i=0;i<D.length;i++){
+                D[i] = (double)D[i]*(Math.pow(Math.E,-elegido.alfa*(Y[i]*elegido.estaDentro(X.get(i)))));
+                Z += (double)D[i];
+            }
+            
+            for(int i=0;i<D.length;i++) D[i] /= Z;
+            
+        }
+        
+        try(FileWriter fw = new FileWriter(cf, true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter out = new PrintWriter(bw)){
+                out.println("-");
+            }
+            catch (IOException e) {}
+        
+    }
+    
+    
+    public double[] AdaboostRun(int[] img, String cf){
+        
+            CD pepe = new CD();
+            
+            double[] categos = new double[8];
+            Arrays.fill(categos,0);
+            int cat = 0;
+            int cate = 0;
+            
             //-RUN  (LECTURA FICHERO)
             File archivo = null;
             FileReader fr = null;
             BufferedReader br = null;
 
             try {
-               archivo = new File (cf);
+               archivo = new File(cf);
                fr = new FileReader (archivo);
                br = new BufferedReader(fr);
 
                String linea;
-               while((linea=br.readLine())!=null)
-                  System.out.println(linea);
+               while((linea=br.readLine())!=null){
+                   if("-".equals(linea)){
+                       cat++;
+                   }
+                   else{
+                      String[] partes = linea.split(";");
+                      pepe.pixel = Integer.parseInt(partes[0]);
+                      pepe.umbral = Integer.parseInt(partes[1]);
+                      pepe.direccion = Integer.parseInt(partes[2]);
+                      pepe.alfa = (double)Double.parseDouble(partes[3]);
+                      categos[cat] += (double)pepe.alfa*pepe.estaDentroParaLeer(img);
+                   }
+               }
             }
             catch(IOException e){}
             finally{
@@ -110,68 +207,54 @@ public class Adaboost {
                   }                  
                }catch (IOException e2){}
             }
+               return categos;
         }
+    
+        public double[] AdaboostRun(Imagen img, String cf){
+        
+            CD pepe = new CD();
+            
+            double[] categos = new double[8];
+            Arrays.fill(categos,0);
+            int cat = 0;
+            int cate = 0;
+            
+            //-RUN  (LECTURA FICHERO)
+            File archivo = null;
+            FileReader fr = null;
+            BufferedReader br = null;
 
-    }
-    
-    
-    public void Adaboost(ArrayList<Imagen> X, int[] Y){
-        
-        //System.out.println(X.size());
-        double[] D = new double[X.size()];
-        Arrays.fill(D,(double)1/X.size());
-        //System.out.println("TODAS LAS POSICIONES DE D INICIALIZADAS A "+D[0]);
-        
-        
-        
-        for(int t=0;t<Adaboost.CDaUsar;t++){
-            double errormin = 23132;
-            //System.out.println("NUEVO CD");
-            CD elegido = null;
-           
-            for(int k=1;k<Adaboost.PruAle;k++){
-                 double errorv = (double)0;
-                
-                CD cd = new CD();
-                //System.out.println(cd);
-                //System.out.println("#"+cd.hashCode());
-                
-                
-                for(int i=0;i<D.length;i++){//D.length;i++){
-                    int hxy = 0;
-                    if(cd.estaDentro(X.get(i)) != Y[i]) hxy = 1;
-                    errorv += D[i] * hxy;
-                }
-                //System.out.println("ERROR DEL CLASIFICADOR ESTE "+errorv);
-                if(errorv < errormin) {elegido = new CD(cd); errormin=errorv;}
+            try {
+               archivo = new File(cf);
+               fr = new FileReader (archivo);
+               br = new BufferedReader(fr);
+
+               String linea;
+               while((linea=br.readLine())!=null){
+                   if("-".equals(linea)){
+                       cat++;
+                   }
+                   else{
+                      String[] partes = linea.split(";");
+                      pepe.pixel = Integer.parseInt(partes[0]);
+                      pepe.umbral = Integer.parseInt(partes[1]);
+                      pepe.direccion = Integer.parseInt(partes[2]);
+                      pepe.alfa = (double)Double.parseDouble(partes[3]);
+                      categos[cat] += (double)pepe.alfa*pepe.estaDentro(img);
+                   }
+               }
             }
-            //System.out.println(elegido.estaDentro(X.get(0)));
-            
-            //if(errormin==0){errormin=(double)-9;}
-            //System.out.println(elegido);
-            //System.out.println("#"+elegido.hashCode());
-            //System.out.println(errormin);
-            //System.out.println(D[0]);
-            
-            //CALCULO DE ALFA
-            
-            double alf = (double)(0.5*(Math.log((1-errormin)/errormin)));
-            elegido.alfa = alf;
-            
-            //GRABAMOS EN FICHERO DE TEXTO
-            elegido.escribirEnFichero("pepo.cf");
-            System.out.println(-elegido.alfa);
-            double Z = 0;
-            for(int i=0;i<D.length;i++){
-                D[i] = (double)D[i]*(Math.pow(Math.E, -elegido.alfa*(Y[i]*elegido.estaDentro(X.get(i)))));
-                Z += (double)D[i];
+            catch(IOException e){}
+            finally{
+               try{                    
+                  if( null != fr ){   
+                     fr.close();     
+                  }                  
+               }catch (IOException e2){}
             }
-            //System.out.println(D[0]);
-            
-            //for(int i=0;i<D.length;i++) D[i]=D[i]/Z;
+               return categos;
         }
-        //System.out.println("FIN");
         
+     
         
     }
-}
