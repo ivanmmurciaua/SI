@@ -12,9 +12,12 @@ import java.util.Arrays;
  *
  * @author fidel
  */
+
 public class Main {
     
     public static DBLoader ml;
+    public static int entrenamiento = 400;
+    public static int tes = 100;
 
     /**
      * @param args the command line arguments
@@ -24,9 +27,9 @@ public class Main {
         
         //Carga DB
         ml = new DBLoader();
-        ml.loadDBFromPath("./db");
+        ml.loadDBFromPath("./db");      
  
-        //Control de arg
+       //Control de arg
         if("Adaboost".equals(args[0])){
             switch(args.length){
                 case 3: if("-run".equals(args[1])){System.err.println("Error:\nModo de uso:\nPara entrenar Adaboost: Adaboost -train fichero.cf\nPara testear Adaboost: Adaboost -run fichero.cf imagen_prueba");} 
@@ -40,6 +43,10 @@ public class Main {
         else{System.err.println("Error:\nModo de uso:\nPara entrenar Adaboost: Adaboost -train fichero.cf\nPara testear Adaboost: Adaboost -run fichero.cf imagen_prueba");}
         
     }
+    
+    /*
+    *  Metodos inutiles
+    */
     
     public static int[] sacarY(int categoria){
         int e = eightypcent(categoria);
@@ -61,7 +68,7 @@ public class Main {
             break;
             case 6: for(int i=res*6;i<e;i++) Y[i]=1;
             break;
-            case 7: for(int i=res*7;i<e;i++) Y[i]=1;
+            case 7: for(int i=res*7;i<Y.length;i++) Y[i]=1;
             break;
         }
         return Y;
@@ -69,7 +76,7 @@ public class Main {
     
     public static int eightypcent(int categoria){
         ArrayList d0imgs = ml.getImageDatabaseForDigit(categoria);
-        double eightypcent = d0imgs.size()*0.75;
+        double eightypcent = d0imgs.size()*0.8;
         return (int)eightypcent;
     }
     
@@ -109,62 +116,111 @@ public class Main {
         }
         return X;
     }
+    
+     /*
+    *  FIN Metodos inutiles
+    */
 
     public static void gymAda(String cf){
-     
-        Adaboost ada = new Adaboost();
-        for(int i=0;i<8;i++){
-            ArrayList<Imagen> X = sacarX(i);
-            int[] Y = sacarY(i);
-            ada.Adaboost(X,Y,cf);
-        }
-        
-        //TEST
+        //Rellenar X con el 80% de imagenes de la BD para el entrenamiento
+        ArrayList<Imagen> X = new ArrayList<>();
         Imagen img;
-        ArrayList<Imagen> X = new ArrayList<Imagen>();
-        Adaboost test = new Adaboost();
-        
-        
-        for(int i=0;i<8;i++){
-            int pesto = 0;
-            ArrayList<Imagen> d0imgs = ml.getImageDatabaseForDigit(i);
-            for(int j=d0imgs.size()-1;pesto<40;j--){
+        for(int i=0; i<8;i++){
+            ArrayList d0imgs = ml.getImageDatabaseForDigit(i);
+            for(int j=0;j<entrenamiento;j++){
                 img = (Imagen) d0imgs.get(j);
-                X.add(img);   
-                pesto++;
+                X.add(img);
             }
         }
 
-            int pepe = 1;
+        int[] Y_abrigos = new int[3200];
+        Arrays.fill(Y_abrigos,-1);
+        for(int i=0;i<400;i++) Y_abrigos[i]=1;
+        
+        int[] Y_bolsos = new int[3200];
+        Arrays.fill(Y_bolsos,-1);
+        for(int i=400;i<800;i++) Y_bolsos[i]=1;
+        
+        int[] Y_camisetas = new int[3200];
+        Arrays.fill(Y_camisetas,-1);
+        for(int i=800;i<1200;i++) Y_camisetas[i]=1;
+        
+        int[] Y_pantalones = new int[3200];
+        Arrays.fill(Y_pantalones,-1);
+        for(int i=1200;i<1600;i++) Y_pantalones[i]=1;
+        
+        int[] Y_sueters = new int[3200];
+        Arrays.fill(Y_sueters,-1);
+        for(int i=1600;i<2000;i++) Y_sueters[i]=1;
+        
+        int[] Y_vestidos = new int[3200];
+        Arrays.fill(Y_vestidos,-1);
+        for(int i=2000;i<2400;i++) Y_vestidos[i]=1;
+        
+        int[] Y_zapatillas = new int[3200];
+        Arrays.fill(Y_zapatillas,-1);
+        for(int i=2400;i<2800;i++) Y_zapatillas[i]=1;
+        
+        int[] Y_zapatos = new int[3200];
+        Arrays.fill(Y_zapatos,-1);
+        for(int i=2800;i<3200;i++) Y_zapatos[i]=1;
+     
+        Adaboost ada = new Adaboost();
+        
+        ada.Adaboost(X, Y_abrigos,cf);
+        ada.Adaboost(X, Y_bolsos,cf);
+        ada.Adaboost(X, Y_camisetas,cf);
+        ada.Adaboost(X, Y_pantalones,cf);
+        ada.Adaboost(X, Y_sueters,cf);
+        ada.Adaboost(X, Y_vestidos,cf);
+        ada.Adaboost(X, Y_zapatillas,cf);
+        ada.Adaboost(X, Y_zapatos,cf);
+        
+        
+        //for(int i=0;i<8;i++){
+            //ArrayList<Imagen> X = sacarX(i);
+            //int[] Y = sacarY(i);
+            //ada.Adaboost(X,,cf);
+        //}
+        
+        //TEST
+        ArrayList<Imagen> p = new ArrayList<Imagen>();
+        Adaboost test = new Adaboost();
+ 
+        for(int i=0;i<8;i++){
+            int con = 0;
+            ArrayList<Imagen> d0imgs = ml.getImageDatabaseForDigit(i);
+            for(int j=d0imgs.size()-1;con<Main.tes;j--){
+                img = (Imagen) d0imgs.get(j);
+                p.add(img);   
+                con++;
+            }
+        }
+
+            int control = 1;
             int cat = 0;
             int aciertos=0;
-            double aciertostotales = 0.0;
             
-            for(int s=0;s<X.size()-1;s++){
-                double[] tests = test.AdaboostRun(X.get(s),cf);
+            for(int s=0;s<p.size()-1;s++){
+                double[] tests = test.AdaboostRun(p.get(s),cf);
                 if(tests[cat]>0){aciertos++;}
-                pepe++;
+                control++;
                 
-                if(pepe==40){
-                    System.out.println(aciertos+"/40");
-                    aciertostotales += aciertos;
-                    pepe=0;
+                if(control==Main.tes){
+                    System.out.println(aciertos+"/"+Main.tes);
+                    System.out.println((double)aciertos/Main.tes+"% de acierto de la categoria "+cat);
+                    control=0;
                     cat++;
                     aciertos=0;
                 }
             }
-            System.out.println((double)aciertostotales/320+"% de acierto");
             
-            
-                
-                /*for(int e=0;e<tests.length;e++){
-                    System.out.print("<"+tests[e]+" ");
-                }
-                System.out.println(">");*/
-            
-        
     }
     
+    
+    /*
+    *  Test para Adaboost   
+    */
     public static void teStAda(String cf, String imge){
        
        Adaboost ada = new Adaboost();
@@ -184,7 +240,7 @@ public class Main {
         salida = ada.AdaboostRun(imagen,cf);
        
         for(int i=0;i<salida.length;i++)
-            System.out.println(salida[i]);
+            System.out.println("Categoria"+i+": "+salida[i]);
         
         for(int i=0;i<salida.length;i++)
            if(salida[i]>max) {max=salida[i]; caete=i;}

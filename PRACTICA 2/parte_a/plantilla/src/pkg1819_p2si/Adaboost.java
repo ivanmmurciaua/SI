@@ -16,21 +16,27 @@ import java.util.Arrays;
  */
 public class Adaboost {
     
-    final static int CDaUsar = 80;
-    final static int PruAle = 300;
+    //Cambiar el numero de CDs a usar (T)
+    static int CDaUsar = 850;
+    //Cambiar el numero de pruebas aleatorias a usar (A)
+    static int PruAle = 8000;
     
-    
+    //Clase de Clasificador Debil
     class CD{
-        
         private int pixel;
         private int umbral;
         private int direccion;
         private double alfa;
         
         CD(){
-
             this.pixel = (int)(Math.random()*784);
             this.umbral = (int)(Math.random()*255);
+            //Evitamos los espacios en blanco
+            do{
+                this.pixel = (int)(Math.random()*784);
+                this.umbral = (int)(Math.random()*255);
+            }while(this.umbral==127);
+            
             this.direccion = (int)(Math.random()*784);
             
             if(this.direccion % 2 == 0){
@@ -39,7 +45,6 @@ public class Adaboost {
             else{
                 this.direccion = -1;
             }
-            
             this.alfa = 0;
         }
         
@@ -59,7 +64,7 @@ public class Adaboost {
             
             byte imageData[] = xi.getImageData();
             imageData[this.pixel] = (byte) (255 - imageData[this.pixel]);
-            int umbralDeLaImagen = imageData[this.pixel] + 128;
+            int umbralDeLaImagen = (int)(imageData[this.pixel] + 128);
             
             //System.out.println("UMBRAL DE LA IMAGEN "+umbralDeLaImagen+" UMBRAL DEL CD "+this.umbral);
             
@@ -70,13 +75,12 @@ public class Adaboost {
                 if(umbralDeLaImagen <= this.umbral) res = 1;
             }
             
-            //System.out.println("RESULTADO "+res);
             return res;
         }
 
         public int estaDentroParaLeer(int[] imagen){
             int res = -1;
-            int umbralDeLaImagen = imagen[this.pixel];
+            int umbralDeLaImagen = (int)(imagen[this.pixel]);
             
             if(this.direccion == 1){
                 if(umbralDeLaImagen > this.umbral) res = 1;
@@ -106,7 +110,7 @@ public class Adaboost {
     
     
     public void Adaboost(ArrayList<Imagen> X, int[] Y, String cf){
-        System.out.println("--------------------------------------------------------------------------------------------------------------------------");
+       
         double[] D = new double[X.size()];
         Arrays.fill(D,(double)1/X.size());
 
@@ -115,9 +119,9 @@ public class Adaboost {
             //System.out.println("NUEVO CD");
             CD elegido = null;
             double vector = 0.0;
-            for(int y=0;y<D.length;y++){
-                vector += D[y];
-            }
+            //for(int y=0;y<D.length;y++){
+            //    vector += D[y];
+            //}
             for(int k=1;k<=Adaboost.PruAle;k++){
                 double errorv = 0.0;
                 CD cd = new CD();
@@ -134,10 +138,10 @@ public class Adaboost {
 
             
             //CALCULO DE ALFA
-            if(errormin == 0.0){System.out.println("**********************************************************SOY UN PUTO DESGRACIAO*************************"); break;}
+            if(errormin == 0.0){break;}
             System.out.println(errormin+"% de error");
             double alf = (double)(0.5*(Math.log((1-errormin)/errormin)));
-            if(alf == Double.parseDouble("Infinity")){System.out.println("**********************************************************SOY UN PUTO DESGRACIAO*************************"); break;}
+            if(alf == Double.parseDouble("Infinity")){break;}
             elegido.alfa = alf;
           
 
@@ -167,7 +171,7 @@ public class Adaboost {
     
     public double[] AdaboostRun(int[] img, String cf){
         
-            CD pepe = new CD();
+            CD cd = new CD();
             
             double[] categos = new double[8];
             Arrays.fill(categos,0);
@@ -191,11 +195,11 @@ public class Adaboost {
                    }
                    else{
                       String[] partes = linea.split(";");
-                      pepe.pixel = Integer.parseInt(partes[0]);
-                      pepe.umbral = Integer.parseInt(partes[1]);
-                      pepe.direccion = Integer.parseInt(partes[2]);
-                      pepe.alfa = (double)Double.parseDouble(partes[3]);
-                      categos[cat] += (double)pepe.alfa*pepe.estaDentroParaLeer(img);
+                      cd.pixel = Integer.parseInt(partes[0]);
+                      cd.umbral = Integer.parseInt(partes[1]);
+                      cd.direccion = Integer.parseInt(partes[2]);
+                      cd.alfa = (double)Double.parseDouble(partes[3]);
+                      categos[cat] += (double)cd.alfa*cd.estaDentroParaLeer(img);
                    }
                }
             }
@@ -212,7 +216,7 @@ public class Adaboost {
     
         public double[] AdaboostRun(Imagen img, String cf){
         
-            CD pepe = new CD();
+            CD cd = new CD();
             
             double[] categos = new double[8];
             Arrays.fill(categos,0);
@@ -236,11 +240,11 @@ public class Adaboost {
                    }
                    else{
                       String[] partes = linea.split(";");
-                      pepe.pixel = Integer.parseInt(partes[0]);
-                      pepe.umbral = Integer.parseInt(partes[1]);
-                      pepe.direccion = Integer.parseInt(partes[2]);
-                      pepe.alfa = (double)Double.parseDouble(partes[3]);
-                      categos[cat] += (double)pepe.alfa*pepe.estaDentro(img);
+                      cd.pixel = Integer.parseInt(partes[0]);
+                      cd.umbral = Integer.parseInt(partes[1]);
+                      cd.direccion = Integer.parseInt(partes[2]);
+                      cd.alfa = (double)Double.parseDouble(partes[3]);
+                      categos[cat] += (double)cd.alfa*cd.estaDentro(img);
                    }
                }
             }
@@ -254,7 +258,4 @@ public class Adaboost {
             }
                return categos;
         }
-        
-     
-        
     }
