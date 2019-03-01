@@ -1,0 +1,24 @@
+
++---------------------------------------------------------------------------------------------------------+
+| - Para entrenar a Adaboost:                                                                             |
+|                                                                                                         |
+|      - Escribir Adaboost -train <nombre_fichero.cf>                                                     |
+|      - Ir a Adaboost.class y cambiar los parametros CDAUsar y PrueAle, siendo, los clasificadores       |
+|        débiles a usar (T) y las pruebas aleatorias (A).                                                 |
+|      - En el Main, cambiar la variable tes por el numero de imagenes que se le pasarán al actual CD     |
+|        para testearlo.                                                                                  |
+|                                                                                                         |
+|   Ejemplo:  Adaboost -train clasificador1.cf                                                            |
+|                                                                                                         |
+|                                                                                                         |
+| - Para ejecutar a Adaboost:                                                                             |
+|                                                                                                         |
+|      - Escribir Adaboost -run <nombre_fichero.cf> <imagen>                                              |
+|                                                                                                         |
+|   Ejemplo: Adaboost -run cf300C5000A.cf ./db/2/1.png                                                    | 
+|                                                                                                         |
++---------------------------------------------------------------------------------------------------------+
+
+ Felices fiestas y un prospero año nuevo!
+
+                                                                                                     Iván
